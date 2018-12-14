@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+{% block content %}
+    <h1 class="mb-3">Posts by {{ user.username }} ({{ posts.total }})</h1>
+
+{% if current_user.is_authenticated %}
+  {% if user != current_user %}
+    {% if not current_user.is_following(user) %}
+    <a class="btn btn-primary btn-sm mt-1 mb-1" href="{{ url_for('follow', username=user.username) }}">Follow</a>
+    {% else %}
+    <a class="btn btn-secondary btn-sm mt-1 mb-1" href="{{ url_for('unfollow', username=user.username) }}">Unfollow</a>
+    {% endif %}
+  {% endif %}
+  {% endif %}
+  Followers: <span class="badge">{{ user.followers.count() }}</span>
+
+
+  Following: <span class="badge">{{ user.followed.count() }}</span>
+
+{% if current_user.is_authenticated and  user != current_user and user.is_following(current_user) %}
+| <span class="label label-default">Follows you</span>
+{% endif %}
+
+    {% for post in posts.items %}
+        <article class="media content-section">
+          <img class="rounded-circle article-img" src="{{ url_for('static', filename='profile_pics/' + post.author.profile_image) }}">
+          <div class="media-body">
+            <div class="article-metadata">
+              <a class="mr-2" href="{{ url_for('user_posts', username=post.author.username) }}">{{ post.author.username }}</a>
+              <small class="text-muted">{{ post.date_posted.strftime('%Y-%m-%d') }}</small>
+            </div>
+            <h2><a class="article-title" href="{{ url_for('post', post_id=post.id) }}">{{ post.title }}</a></h2>
+            <p class="article-content">{{ post.content }}</p>
+          </div>
+        </article>
+    {% endfor %}
+    {% for page_number in posts.iter_pages(left_edge=1, right_edge=1, left_current=1, right_current=2) %}
+      {% if page_number %}
+        {% if posts.page == page_number %}
+          <a class="btn btn-info mb-4" href="{{ url_for('user_posts', username=user.username, page=page_number) }}">{{ page_number }}</a>
+        {% else %}
+          <a class="btn btn-outline-info mb-4" href="{{ url_for('user_posts', username=user.username, page=page_number) }}">{{ page_number }}</a>
+        {% endif %}
+      {% else %}
+        ...
+      {% endif %}
+    {% endfor %}
+{% endblock content %}
