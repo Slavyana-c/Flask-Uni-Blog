@@ -11,7 +11,7 @@ from app import app, mail, db, bcrypt, logger
 from flask import abort, render_template, request, flash, redirect, url_for
 from .forms import RegistrationForm, PostForm, LoginForm, UpdateAccountForm, RequestResetForm, ResetPasswordForm
 from .models import User, Post, Follow
-from flask_login import login_user, current_user, logout_user, login_required 
+from flask_login import login_user, current_user, logout_user, login_required
 from flask_mail import Message
 
 # Home page
@@ -57,19 +57,20 @@ def login():
                 next_page = request.args.get('next')
                 logger.info('User logged in: {} - {}'.format(user.email, user.username))
                 return redirect(next_page) if next_page else redirect(url_for('index'))
-                
+
             else:
                 flash('Login Unsuccessful. Please check username and password', 'danger')
     return render_template('login.html', title='Login', form=form)
 
 # Logout
 @app.route('/logout')
+@login_required
 def logout():
     logger.info('Logging out: {} - {}'.format(current_user.email, current_user.username))
     logout_user()
     return redirect(url_for('index'))
-    
-# Hash and save picture    
+
+# Hash and save picture
 def save_picture(form_picture):
     random_hex = binascii.b2a_hex(os.urandom(8))
     _, file_extension = os.path.splitext(form_picture.filename)
@@ -100,12 +101,12 @@ def account():
         flash('Your account has been updated!', 'success')
         return redirect(url_for('account'))
     elif request.method == 'GET':
-        form.username.data = current_user.username 
-        form.email.data = current_user.email   
+        form.username.data = current_user.username
+        form.email.data = current_user.email
     profile_image = url_for('static', filename='profile_pics/' + current_user.profile_image)
     return render_template('account.html', title='Account', profile_image=profile_image, form=form)
 
-# New post page    
+# New post page
 @app.route('/post/new', methods=['GET', 'POST'])
 @login_required
 def new_post():
